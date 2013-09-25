@@ -5,9 +5,9 @@
 package com.addisai.binarizer;
 
 import com.addisai.commons.data.DataManager;
+import com.addisai.commons.helpers.Numerics;
 import com.addisai.commons.stat.DataSmooth;
 import com.addisai.commons.stat.Quantile;
-import com.sun.org.apache.bcel.internal.generic.AALOAD;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -117,7 +117,7 @@ public class Binarizer {
             HashMap<String, Double[]> R_MovingAveragesOfSong = new HashMap<>();
             //set the UP,NEUTRAL and down 
             //CAUTION adjust it with D+K days popularity
-            if (lookBacks[lookBacks.length - 1] <= downThreshold(lookBacks)) {
+            if (lookBacks[lookBacks.length - 1] <= downThreshold(Numerics.doublePrimitiveOf(lookBacks))) {
                 if(catagorizationIs_UP){
                   UP=DOWN=0;                  
                 }
@@ -125,7 +125,7 @@ public class Binarizer {
                  DOWN=1; 
                  UP=0;
                 }
-            } else if (lookBacks[lookBacks.length - 1] >= upThreshold(lookBacks)) {
+            } else if (lookBacks[lookBacks.length - 1] >= upThreshold(Numerics.doublePrimitiveOf(lookBacks))) {
                 if(catagorizationIs_UP){
                   UP=1; 
                   DOWN=0;
@@ -143,7 +143,7 @@ public class Binarizer {
             for (int index = songLookBacks.get(key).length - 1; index >= 0; index--) {
                 double [] songMAs=new double[songLookBacks.get(key).length];
                 for(int maIndex=0;maIndex<MA_WINSIZEs.length;maIndex++){
-                songMAs[maIndex] = DataSmooth.getMA(songLookBacks.get(key),index,MA_WINSIZEs[maIndex]);
+                songMAs[maIndex] = DataSmooth.getMA(Numerics.doublePrimitiveOf(songLookBacks.get(key)),index,MA_WINSIZEs[maIndex]);
                 }
                 MAs.add(songMAs);
             }            

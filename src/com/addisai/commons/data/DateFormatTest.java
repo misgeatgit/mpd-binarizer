@@ -24,10 +24,12 @@ public class DateFormatTest {
 
         Calendar c = new GregorianCalendar();
         String dateText = "2012-01-02";
+        String date;
         try {
             Date d = Calendar.getInstance().getTime();
             d = df.parse(dateText);
-            System.out.println(d.getYear() + "-" + d.getMonth() + "-" + d.getDay());
+            date=df.format(d);
+            System.out.println(date);
         } catch (ParseException ex) {
             ex.getMessage();
             Logger.getLogger(DateFormatTest.class.getName()).log(Level.SEVERE, null, ex);
