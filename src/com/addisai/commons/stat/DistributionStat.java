@@ -12,15 +12,14 @@ import java.util.List;
  *
  * @author Misgana Bayetta <misgana.bayetta@gmail.com>
  */
-public class Quantile {
-
-    /**
+public class DistributionStat {
+   /**
      *here the technique is somewhat diffferent than the conventional. i.e the data is sorted and divided into n bins in our case
      * @param data
      * @param binSize     
      * @return buckets of binsize
      */
-    public static List<Double[]> getQuantile(double[] data, int binSize) {
+    public static List<Double[]> getBuckets(double[] data, int binSize) {
         List<Double[]> quantileList = new ArrayList<>();
         List<Double> dataList = new ArrayList<>();
         for (int i = 0; i < data.length; i++) {
@@ -54,21 +53,26 @@ public class Quantile {
         }
         return quantileList;
     }
-
+    public static Double [] getMvoingAverage(Double [] data,int windowSize){
+        return null;
+    }
+    public static Double [] getMovingVariance(Double [] data){
+        return null;
+    }
     /**
      * For testing purpose
      * @param args 
      */
-    public static void main(String[] args) {
+   /* public static void main(String[] args) {
         double[] testData = {470, 541, 745, 765, 834, 705, 511, 699, 531, 580, 591, 663, 563, 535};
         System.out.println("Initial Data:{470,541,745,765,705,511,699,531,580,591,663,563,535,616}");
-        List<Double[]> testq = getQuantile(testData, 3);
+        List<Double[]> testq = getBuckets(testData, 3);
         for (int i = 0; i < testq.size(); i++) {
             System.out.print("[");
             for (int j = 0; j < testq.get(i).length; j++) {
                 System.out.print(testq.get(i)[j] + ",");
             }
             System.out.println("]");
-        }
-    }
+        }  */
+    
 }

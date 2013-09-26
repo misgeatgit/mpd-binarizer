@@ -6,8 +6,7 @@ package com.addisai.binarizer;
 
 import com.addisai.commons.data.DataManager;
 import com.addisai.commons.helpers.Numerics;
-import com.addisai.commons.stat.DataSmooth;
-import com.addisai.commons.stat.Quantile;
+import com.addisai.commons.stat.DistributionStat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -29,7 +28,7 @@ public class Binarizer {
     String[] featureNames;
     ArrayList<String[]> rawData;
     ArrayList<String[]> binarizedData;
-    int [] MA_WINSIZEs={5,10,20,30,50}; //different set of moving average window sizes
+    int[] MA_WINSIZEs = {5, 10, 20, 30, 50}; //different set of moving average window sizes
     int lookAheadDay; //K
     int lookBackDay; //R   
     int Q_binSize;  //the binsize for the R days lookback moving averages
@@ -37,22 +36,23 @@ public class Binarizer {
     Date D;
 
     /**
-     *Initializes the binarization params
+     * Initializes the binarization params
+     *
      * @param fileName
      * @param lookAhead
      * @param getlookBackList
      * @param date
      */
-    public Binarizer(String fileName, int lookAhead, int lookBack, Date date,int Q_binSize) {
+    public Binarizer(String fileName, int lookAhead, int lookBack, Date date, int Q_binSize) {
         try {
             dm = new DataManager(fileName);
             rawData = (ArrayList<String[]>) dm.getData();
             this.lookAheadDay = lookAhead;
             lookBackDay = lookBack;
             D = date;
-            this.Q_binSize=Q_binSize;            
+            this.Q_binSize = Q_binSize;
             dp = new DayPopularity(date, rawData);
-            featureNames=new String[(Q_binSize*MA_WINSIZEs.length)+1]; //the last one is for the target class
+            featureNames = new String[(Q_binSize * MA_WINSIZEs.length) + 1]; //the last one is for the target class
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
             Logger.getLogger(Binarizer.class.getName()).log(Level.SEVERE, null, ex);
@@ -71,7 +71,7 @@ public class Binarizer {
          int bottomBinSize=(temp.length/3); 
          T_DOWN=temp[bottomBinSize];
          T_UP=temp[bottomBinSize+(temp.length-bottomBinSize*2)-1];*/
-        List< Double[]> thirdQuantile = Quantile.getQuantile(lookBacks, 3);
+        List< Double[]> thirdQuantile = DistributionStat.getBuckets(lookBacks, 3);
         return thirdQuantile.get(1)[thirdQuantile.get(1).length - 1];
     }
 
@@ -81,26 +81,26 @@ public class Binarizer {
          int bottomBinSize=(temp.length/3); 
          T_DOWN=temp[bottomBinSize];
          T_UP=temp[bottomBinSize+(temp.length-bottomBinSize*2)-1];*/
-        List< Double[]> thirdQuantile = Quantile.getQuantile(lookBacks, 3);
+        List< Double[]> thirdQuantile = DistributionStat.getBuckets(lookBacks, 3);
         return thirdQuantile.get(1)[0];
 
     }
 
-    public List<String[]> binarize(String datasetFileName) {
-        rawData = (ArrayList<String[]>) dm.getData();        
+    public List<String[]> getBinData(String datasetFileName) {
+        rawData = (ArrayList<String[]>) dm.getData();
         ArrayList<SongPopularityOnDay> sodList = dp.getAllSongPopularitOnDay();//THIS LINE HAS A DEFFECT
         HashMap<String, Double[]> songLookBacks = new HashMap<>();   // musicId key and popularity set values     
-        int [] binValues=new int[Q_binSize*featureNames.length+1]; //last one for UP/DOWN
+        int[] binValues = new int[Q_binSize * featureNames.length + 1]; //last one for UP/DOWN
         int UP;
-        int DOWN;        
-        List<String []> binerizedDataSet=new ArrayList<>();
+        int DOWN;
+        List<String[]> binerizedDataSet = new ArrayList<>();
         //set feature names
-            for (int i =0; i <Q_binSize; i++) {
-                for(int j=0;j<MA_WINSIZEs.length;j++){
-                featureNames[i]="MA_"+j+"_bin"+i;
-                }
+        for (int i = 0; i < Q_binSize; i++) {
+            for (int j = 0; j < MA_WINSIZEs.length; j++) {
+                featureNames[i] = "MA_" + j + "_bin" + i;
             }
-            featureNames[featureNames.length-1]="OUT";
+        }
+        featureNames[featureNames.length - 1] = "OUT";
         //get all popularity values related to a songId and add it to a list
         for (SongPopularityOnDay sod : sodList) {
             try {
@@ -111,51 +111,58 @@ public class Binarizer {
                 Logger.getLogger(Binarizer.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        //apply moving average on each popualrity values of each song in the list
+        //apply moving average on each popualrity values of each song in the list with d/t window sizes
+        List<HashMap<Integer, Double[]>> Q_MAList = new ArrayList<>(); //for containing d/t window size moving averages
         for (String key : songLookBacks.keySet()) {
             Double[] lookBacks = songLookBacks.get(key);
-            HashMap<String, Double[]> R_MovingAveragesOfSong = new HashMap<>();
             //set the UP,NEUTRAL and down 
             //CAUTION adjust it with D+K days popularity
-            if (lookBacks[lookBacks.length - 1] <= downThreshold(Numerics.doublePrimitiveOf(lookBacks))) {
-                if(catagorizationIs_UP){
-                  UP=DOWN=0;                  
+            if (lookBacks[lookBacks.length - 1] <= downThreshold(Numerics.doubleObjToDoublePrim(lookBacks))) {
+                if (catagorizationIs_UP) {
+                    UP = DOWN = 0;
+                } else {
+                    DOWN = 1;
+                    UP = 0;
                 }
-                else{
-                 DOWN=1; 
-                 UP=0;
-                }
-            } else if (lookBacks[lookBacks.length - 1] >= upThreshold(Numerics.doublePrimitiveOf(lookBacks))) {
-                if(catagorizationIs_UP){
-                  UP=1; 
-                  DOWN=0;
-                }
-                else{
-                 UP=DOWN=0;   
+            } else if (lookBacks[lookBacks.length - 1] >= upThreshold(Numerics.doubleObjToDoublePrim(lookBacks))) {
+                if (catagorizationIs_UP) {
+                    UP = 1;
+                    DOWN = 0;
+                } else {
+                    UP = DOWN = 0;
                 }
             } else {  //neutral case
-                UP=DOWN=0;
+                UP = DOWN = 0;
             }
             // calculate the R days moving average with d/t windows of D of each song i.e  (D-R+1,D) 
-            HashMap<Integer,Double[]> Q_MAs=new HashMap<>(); //key is the window size and values are the moving average of the song
-            List<HashMap<Integer,Double[]>> Q_MAList= new ArrayList<>(); //for containing d/t window size moving averages
-            
-            for (int index = songLookBacks.get(key).length - 1; index >= 0; index--) {
-                double [] songMAs=new double[songLookBacks.get(key).length];
-                for(int maIndex=0;maIndex<MA_WINSIZEs.length;maIndex++){
-                songMAs[maIndex] = DataSmooth.getMA(Numerics.doublePrimitiveOf(songLookBacks.get(key)),index,MA_WINSIZEs[maIndex]);
+            HashMap<Integer, Double[]> Q_MAs = new HashMap<>(); //key is the window size and values are the moving average of the song
+
+            for (int maIndex = 0; maIndex < MA_WINSIZEs.length; maIndex++) {
+                double[] songMAs = new double[songLookBacks.get(key).length];
+                for (int index = songLookBacks.get(key).length - 1; index >= 0; index--) {
+                    songMAs[index] = DistributionStat.getMvoingAverage(songLookBacks.get(key), MA_WINSIZEs[maIndex]);
                 }
-                MAs.add(songMAs);
-            }            
-            //binerize
-            int [] MA_bins=new int[MA_WINSIZEs.length];
-            for(Double[]d:MAs){
-            List<Double[]> bins = Quantile.getQuantile(d, Q_binSize);
-            //set the bits            
+                Q_MAs.put(MA_WINSIZEs[maIndex], Numerics.doublePrimToDoubleObj(songMAs));
             }
-            
+            Q_MAList.add(Q_MAs);
+
         }
+        //binerize          
         return null;
+    }
+    /**
+     * 
+     * @param maData
+     * @param valBinarized
+     * @return 
+     */     
+    private int[] getBinVal(Double[] maData,int binSize, Double valBinarized) {       
+        List<Double[]> maBins=DistributionStat.getBuckets(Numerics.doubleObjToDoublePrim(maData), binSize);
+        int [] bits=new int[binSize];
+        for(Double [] d:maBins){
+            int i=0;
+            if(valBinarized)
+        }        
     }
 
     /**
@@ -194,7 +201,7 @@ public class Binarizer {
 //         -K (The look ahead)
 //         -D (The day)
 //         *PROCEDURES
- //        -Set UP and DOWN
+    //        -Set UP and DOWN
 //         -Get all songs of the day
 //         -calculate the thresholds with R days look bakc
 //         -calculate the moving averages of 5,10,20,30 and 50 days
