@@ -4,7 +4,7 @@
  */
 package com.addisai.binarizer;
 
-import com.addisai.commons.data.DataManager;
+import com.addisai.commons.data.CSVDataManager;
 import com.addisai.commons.helpers.Numerics;
 import com.addisai.commons.stat.DistributionStat;
 import java.util.ArrayList;
@@ -23,7 +23,7 @@ public class Binarizer {
     /**
      * @param args the command line arguments
      */
-    DataManager dm;
+    CSVDataManager dm;
     DayPopularity dp;
     String[] featureNames;
     ArrayList<String[]> rawData;
@@ -45,7 +45,7 @@ public class Binarizer {
      */
     public Binarizer(String fileName, int lookAhead, int lookBack, Date date, int Q_binSize) {
         try {
-            dm = new DataManager(fileName);
+            dm = new CSVDataManager(fileName);
             rawData = (ArrayList<String[]>) dm.getData();
             this.lookAheadDay = lookAhead;
             lookBackDay = lookBack;
