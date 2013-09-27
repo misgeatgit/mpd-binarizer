@@ -28,7 +28,7 @@ import java.util.logging.Logger;
     int lookBackDay; //R   
     final int Q_binSize = 5;  //the binsize for the R days lookback moving averages
     boolean catagorizationIs_UP;
-    final String CSV_Dir="song_bin";
+    final String CSV_Dir="song_bin_of_";
     File f;
     private String[] featureNames;
    
@@ -50,7 +50,7 @@ import java.util.logging.Logger;
             while(stk.hasMoreElements()){
                 fileName=stk.nextToken();
             }
-            f=new File(CSV_Dir+"_of_"+fileName);
+            f=new File(CSV_Dir+fileName);
             f.mkdir();
             
         } catch (FileNotFoundException ex) {
