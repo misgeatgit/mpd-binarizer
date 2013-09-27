@@ -5,11 +5,16 @@
 package com.addisai.commons.data;
 
 import au.com.bytecode.opencsv.CSVReader;
+import au.com.bytecode.opencsv.CSVWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *The purpose of this class is saving and fetching data from a file
@@ -19,6 +24,7 @@ public class CSVDataManager {
     String fileName;
     CSVParser csvParser;
     FileReader fileReader;
+    CSVWriter csvWriter;
     public CSVDataManager(String fileName) throws FileNotFoundException {
         this.fileName=fileName;
         fileReader=new FileReader(fileName);
@@ -63,4 +69,13 @@ public class CSVDataManager {
         return rowSt;
     }
 }
+    public void saveCSV(List<String []> binData,String fileName){
+        try {
+            csvWriter=new CSVWriter(new FileWriter(fileName));
+            csvWriter.writeAll(binData);
+        } catch (IOException ex) {
+            ex.getMessage();
+            Logger.getLogger(CSVDataManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }

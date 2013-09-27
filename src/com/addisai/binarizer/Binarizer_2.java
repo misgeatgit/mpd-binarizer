@@ -7,11 +7,12 @@ package com.addisai.binarizer;
 import com.addisai.commons.data.CSVDataManager;
 import com.addisai.commons.helpers.Numerics;
 import com.addisai.commons.stat.DistributionStat;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.StringTokenizer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -29,6 +30,7 @@ public class Binarizer_2 {
     final int Q_binSize = 5;  //the binsize for the R days lookback moving averages
     boolean catagorizationIs_UP;
     final String CSV_Dir="song_bin";
+    File f;
     private String[] featureNames;
    
     enum Category {
@@ -41,7 +43,17 @@ public class Binarizer_2 {
             dm = new CSVDataManager(rawDataFilePath);
             this.lookBackDay = lookBackDays;
             this.lookAheadDay = lookAheadDays;
-            this.catagorizationIs_UP = catType;
+            this.catagorizationIs_UP = catType; 
+           
+            //create a saving dir
+            StringTokenizer stk=new StringTokenizer(CSV_Dir,"/");
+            String fileName=null;
+            while(stk.hasMoreElements()){
+                fileName=stk.nextToken();
+            }
+            f=new File(CSV_Dir+"_of_"+fileName);
+            f.mkdir();
+            
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Binarizer_2.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -114,8 +126,10 @@ public class Binarizer_2 {
         String fileName;  //the file name for the binary
         List<String[]> binData = new ArrayList<>(); //the final output to be saved
         binData.add(featureNames);
+        System.out.println("INFO:Started Binarization of");
         for (String key : songPopularityhash.keySet()) { //loop on each song
-            fileName = key + ".moses";
+            System.out.print("music #"+key+"...");
+            fileName = key + ".moses";           
             Double[] songPoplarity = songPopularityhash.get(key);
             for (int i = lookBackDay; i < songPoplarity.length; i++) {
                 Double[] lookBackData = Numerics.getLookBacks(songPoplarity, i, lookBackDay);
@@ -146,7 +160,10 @@ public class Binarizer_2 {
                binData.add(rowBinVlaues);
             }
            //save the CSV generated
-            
+            System.out.print("saving("+fileName+")...");
+           dm.saveCSV(binData,f.getAbsolutePath()+"/"+fileName);
+            System.out.println("finished");
         }
     }
+   
 }
