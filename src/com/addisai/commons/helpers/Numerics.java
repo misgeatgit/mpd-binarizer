@@ -34,7 +34,7 @@ public class Numerics {
     public static Integer [] binarize(List<Double[]> buckets){
         return null;
     }
-    public static Double[] getLookBacks(Double [] data,int lookBackSize){
+    public static Double[] getLookBacks(Double [] data,int refIndex,int lookBackSize){
         return null;
     }
     public static void main(String[] args) {
