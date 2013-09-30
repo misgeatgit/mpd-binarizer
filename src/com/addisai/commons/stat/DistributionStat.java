@@ -1,3 +1,4 @@
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -58,12 +59,91 @@ public class DistributionStat {
     }
 
     public static Double[] getMvoingAverage(Double[] data, int windowSize) {
-        return null;
+        Double[] d = data.clone();
+        for (int i = d.length - 1; i >= 0; i--) {
+            Double total = 0.0;
+            for (int j = 0; j < windowSize; j++) {
+                if (i - j < 0) {
+                    break;
+                } else {
+                    total += d[i - j];
+                }
+            }
+            d[i] = total / windowSize;
+        }
+        return d;
     }
 
-    public static Double[] getMovingVariance(Double[] data,int windowSize) {
-        return null;
+    public static Double[] getMovingVariance(Double[] data, int windowSize) {
+        Double[] d = data.clone();
+        for (int i = d.length - 1; i >= 0; i--) {
+            Double[] varData = new Double[windowSize];
+            for (int j = 0; j < windowSize; j++) {
+                if (i - j < 0) {
+                    break;
+                } else {
+                    varData[j] = d[i - j];
+                }
+            }
+            d[i] = onlineVariance(varData);
+        }
+        return d;
     }
+
+    public static Double onlineVariance(Double[] data) {
+        /*
+         def online_variance(data):
+         n = 0
+         mean = 0
+         M2 = 0 
+         for x in data:
+         {n = n + 1
+         delta = x - mean
+         mean = mean + delta/n
+         M2 = M2 + delta*(x - mean) 
+         }
+         variance = M2/(n - 1)
+         return variance
+         */
+        System.out.println("data\n[");
+        for(Double x:data){
+            System.out.print(x+",");
+        }
+        System.out.println("]");
+        int n = 0;
+        Double mean = 0d;
+        Double M2 = 0d;
+        Double variance = Double.NaN;        
+        for (Double d : data) {
+            n = n + 1;
+           //System.out.println("DEBUG:mean="+mean+" d="+d+" n="+n);            
+            Double delta = d - mean;
+            //System.out.println("DEBUG:delta="+delta);
+            mean = mean + (delta / n);
+            M2 = M2 + delta * (d - mean);
+        }
+        variance = M2 / (n - 1);
+
+        return variance;
+    }
+    
+     //Test case for the onlineVariance method
+     public static void main(String[] args) {
+     Double [] varData={679.0,579.0,749.0,728.0,810.0};
+     Double [] val=getMovingVariance(varData, 5);
+     System.out.println(DistributionStat.onlineVariance(varData));
+     }
+     
+    /* public static void main(String[] args) {
+     Double [] x = {1.0, 2.0, 3.0, 4.0, 5.0};
+     Double [] y=DistributionStat.getMvoingAverage(x, 5);
+     int i=0;
+     for(Double d:y){            
+     System.out.println(x[i]+":"+d);
+     i++;
+     }
+     }
+     */
     /**
      * For testing purpose
      *

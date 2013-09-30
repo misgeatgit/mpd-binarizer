@@ -19,7 +19,8 @@ import java.util.logging.Logger;
 /**
  *
  * @author Misgana Bayetta <misgana.bayetta@gmail.com>
- */public class Binarizer {
+ */
+public class Binarizer {
 
     CSVDataManager dm;
     ArrayList<String[]> rawData;
@@ -28,10 +29,10 @@ import java.util.logging.Logger;
     int lookBackDay; //R   
     final int Q_binSize = 5;  //the binsize for the R days lookback moving averages
     boolean catagorizationIs_UP;
-    final String CSV_Dir="song_bin_of_";
+    final String CSV_Dir = "song_bin_of_";
     File f;
     private String[] featureNames;
-   
+
     enum Category {
 
         UP, NEUTRAL, DOWN //set values for each
@@ -40,19 +41,20 @@ import java.util.logging.Logger;
     public Binarizer(String rawDataFilePath, int lookBackDays, int lookAheadDays, boolean catType) {
         try {
             dm = new CSVDataManager(rawDataFilePath);
+            this.rawData=(ArrayList<String[]>) dm.getData();
             this.lookBackDay = lookBackDays;
             this.lookAheadDay = lookAheadDays;
-            this.catagorizationIs_UP = catType; 
-           
+            this.catagorizationIs_UP = catType;
+
             //create a saving dir
-            StringTokenizer stk=new StringTokenizer(CSV_Dir,"/");
-            String fileName=null;
-            while(stk.hasMoreElements()){
-                fileName=stk.nextToken();
+            StringTokenizer stk = new StringTokenizer(rawDataFilePath, "/");
+            String fileName = null;
+            while (stk.hasMoreElements()) {
+                fileName = stk.nextToken();
             }
-            f=new File(CSV_Dir+fileName);
+            f = new File(CSV_Dir + fileName);
             f.mkdir();
-            
+
         } catch (FileNotFoundException ex) {
             Logger.getLogger(Binarizer.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -91,15 +93,19 @@ import java.util.logging.Logger;
 
     private void setFeatureNames() {
         featureNames = new String[2 * Q_binSize * M_WINSIZEs.length + 1]; // The last one is for the target class
+        int ref=0;
         for (int l = 0; l < M_WINSIZEs.length; l++) {
-            for (int i = 0; i < Q_binSize * M_WINSIZEs.length; i++) {
-                featureNames[i] = "MA" + M_WINSIZEs[l] + "_bin" + i;
+            for (int i = 0; i <Q_binSize; i++) {
+                featureNames[ref+i] = "MA" + M_WINSIZEs[l] + "_bin" + (i+1);
             }
+            ref+=(Q_binSize);
         }
+        //int ref=Q_binSize*M_WINSIZEs.length;//the next location for setting other feature names
         for (int l = 0; l < M_WINSIZEs.length; l++) {
-            for (int i = Q_binSize * M_WINSIZEs.length; i < featureNames.length - 1; i++) {
-                featureNames[i] = "MV" + M_WINSIZEs[l] + "_bin" + i;
+            for (int i =0; i <Q_binSize; i++) {
+                featureNames[ref+i] = "MV" + M_WINSIZEs[l] + "_bin" + (i+1);                
             }
+            ref+=(Q_binSize);
         }
         featureNames[featureNames.length - 1] = "OUT";
     }
@@ -119,7 +125,7 @@ import java.util.logging.Logger;
 
     public void binarize() {
         ArrayList<String[]> headerRemovedData = (ArrayList<String[]>) rawData.clone();
-        headerRemovedData.remove(0);
+        headerRemovedData.remove(0); //remove the date row
         setFeatureNames();
         HashMap<String, Double[]> songPopularityhash = getSongPopularityhash(headerRemovedData);
         String fileName;  //the file name for the binary
@@ -127,12 +133,22 @@ import java.util.logging.Logger;
         binData.add(featureNames);
         System.out.println("INFO:Started Binarization of");
         for (String key : songPopularityhash.keySet()) { //loop on each song
-            System.out.print("music #"+key+"...");
-            fileName = key + ".moses";           
+            System.out.print("music #" + key + "...");
+            fileName = key + ".moses";
             Double[] songPoplarity = songPopularityhash.get(key);
             for (int i = lookBackDay; i < songPoplarity.length; i++) {
-                Double[] lookBackData = Numerics.getLookBacks(songPoplarity, i, lookBackDay);
-                Category prCat = getCat(lookBackData, songPoplarity[i]); //Modify it with the look ahead value
+                Double[] lookBackData=null;
+                try {
+                    lookBackData = Numerics.getLookBacks(songPoplarity, i, lookBackDay);
+                } catch (Exception ex) {
+                   ex.getMessage();
+                }
+                Category prCat = null;
+                if (i + lookAheadDay > (songPoplarity.length - 1)) { // get the cat of D+K
+                    prCat = getCat(lookBackData, songPoplarity[songPoplarity.length - 1]);
+                } else {
+                    prCat = getCat(lookBackData, songPoplarity[i + lookAheadDay]);
+                }
                 String[] rowBinVlaues = new String[featureNames.length]; //the bin values as a string 
                 setCatValue(rowBinVlaues, prCat);
                 int ref = 0;
@@ -144,25 +160,34 @@ import java.util.logging.Logger;
 
 
                     //Moving averages binarization
-                    Integer[] MABinValue = Numerics.binarize(lookBackMABucket);
+                    Integer[] MABinValue = Numerics.binarize(lookBackMABucket,lookBackMA[lookBackMA.length-1]);
                     for (int index = 0; index < MABinValue.length; index++) {
                         rowBinVlaues[ref] = String.valueOf(MABinValue[index]);
                         ref++;
                     }
                     //Moving variance binarization
-                    Integer[] MVBinValue = Numerics.binarize(lookBackMVBucket);
+                    Integer[] MVBinValue = Numerics.binarize(lookBackMVBucket,lookBackMV[lookBackMV.length-1]);
                     for (int index = 0; index < MVBinValue.length; index++) {
                         rowBinVlaues[ref] = String.valueOf(MVBinValue[index]);
                         ref++;
                     }
                 }
-               binData.add(rowBinVlaues);
+                if(rowBinVlaues.length!=featureNames.length){
+                    System.out.println("FATAL ERROR:feature names and row values doesnt match in length");
+                    System.exit(0);
+                }
+                binData.add(rowBinVlaues);
             }
-           //save the CSV generated
-            System.out.print("saving("+fileName+")...");
-           dm.saveCSV(binData,f.getAbsolutePath()+"/"+fileName);
+            //save the CSV generated
+            System.out.print("saving(" + fileName + ")...");
+            dm.saveCSV(binData, f.getAbsolutePath() + "/" + fileName);
             System.out.println("finished");
         }
+        System.out.println("Fnished binarization of "+songPopularityhash.size()+" songs");
     }
-   
+    public static void main(String[] args) {
+       // Binarizer bz=new Binarizer("home/misgana/Desktop/music-popularity-prediction/Rhapsody Time Series Data/ArtistDatePlaysMatrixGT60sTop1K.csv", 50, 5, true);
+         Binarizer bz=new Binarizer("ArtistDatePlaysMatrixGT60sTop1K.csv", 50, 5, true);
+        bz.binarize();
+    }
 }
