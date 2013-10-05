@@ -65,7 +65,7 @@ public class Numerics {
 
     public static Double[] getLookBacks(Double[] data, int refIndex, int lookBackSize) throws Exception {
         Double[] lookBacks = new Double[lookBackSize];
-        if (refIndex + 1 < lookBackSize) {
+        if ((refIndex + 1) < lookBackSize) {
             throw new Exception("lookBack size exceeds the data size");
         } else {
 

@@ -76,16 +76,21 @@ public class DistributionStat {
 
     public static Double[] getMovingVariance(Double[] data, int windowSize) {
         Double[] d = data.clone();
-        for (int i = d.length - 1; i >= 0; i--) {
-            Double[] varData = new Double[windowSize];
-            for (int j = 0; j < windowSize; j++) {
-                if (i - j < 0) {
-                    break;
-                } else {
-                    varData[j] = d[i - j];
-                }
+        for (int i = (d.length - 1); i >= 0; i--) {
+            Double[] varData = null;
+            if ((i + 1) >= windowSize) {
+                varData = new Double[windowSize];
+            } else {
+                varData = new Double[i + 1];
+            }
+
+            for (int j = 0; j < varData.length; j++) {
+
+                varData[j] = d[i - j];
+
             }
             d[i] = onlineVariance(varData);
+
         }
         return d;
     }
@@ -105,18 +110,18 @@ public class DistributionStat {
          variance = M2/(n - 1)
          return variance
          */
-        System.out.println("data\n[");
-        for(Double x:data){
-            System.out.print(x+",");
-        }
-        System.out.println("]");
+        //System.out.println("data\n[");
+        //for (Double x : data) {
+        //    System.out.print(x + ",");
+        //  }
+        // System.out.println("]");
         int n = 0;
         Double mean = 0d;
         Double M2 = 0d;
-        Double variance = Double.NaN;        
+        Double variance = Double.NaN;
         for (Double d : data) {
             n = n + 1;
-           //System.out.println("DEBUG:mean="+mean+" d="+d+" n="+n);            
+            //System.out.println("DEBUG:mean="+mean+" d="+d+" n="+n);            
             Double delta = d - mean;
             //System.out.println("DEBUG:delta="+delta);
             mean = mean + (delta / n);
@@ -126,14 +131,14 @@ public class DistributionStat {
 
         return variance;
     }
-    
-     //Test case for the onlineVariance method
-     public static void main(String[] args) {
-     Double [] varData={679.0,579.0,749.0,728.0,810.0};
-     Double [] val=getMovingVariance(varData, 5);
-     System.out.println(DistributionStat.onlineVariance(varData));
-     }
-     
+    //Test case for the onlineVariance method
+    //public static void main(String[] args) {
+    //   Double[] varData = {679.0, 579.0, 749.0, 728.0, 810.0};
+    // Double[] val = getMovingVariance(varData, 5);
+    // System.out.println(DistributionStat.onlineVariance(varData));
+    //System.out.println(DistributionStat.onlineVariance(new Double[]{1d}));
+    // System.out.println(DistributionStat.onlineVariance(new Double[]{0d}));
+    // }
     /* public static void main(String[] args) {
      Double [] x = {1.0, 2.0, 3.0, 4.0, 5.0};
      Double [] y=DistributionStat.getMvoingAverage(x, 5);
