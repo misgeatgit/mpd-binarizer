@@ -78,22 +78,28 @@ public class Numerics {
     }
 
     //Test case for binarize
-   /*
-    public static void main(String[] args) {
+   
+    /*public static void main(String[] args) {
         List<Double[]> x = new ArrayList<>();
         x.add(new Double[]{1d, 2d, 3d, 4d, 5d});
         x.add(new Double[]{6d, 7d, 8d, 9d, 10d});
         x.add(new Double[]{11d, 12d, 13d, 14d, 15d});
         x.add(new Double[]{16d, 17d, 18d, 19d, 20d});
         x.add(new Double[]{21d, 22d, 23d, 24d, 25d});
-        Integer [] bits=Numerics.binarize(x,-7d);
+        List<Double[]> y = new ArrayList<>();
+        y.add(new Double[]{1d});
+        y.add(new Double[]{6d});
+        y.add(new Double[]{11d});
+        y.add(new Double[]{16d});
+        y.add(new Double[]{21d});
+        Integer [] bits=Numerics.binarize(y,25d);
         if(bits[0]==1)
             System.out.println("PASSED");
-        for(Integer y: bits){
-            System.out.print(y); 
+        for(Integer z: bits){
+            System.out.print(z); 
         }
-    }
-    */
+    }*/
+    
     /*
      //Test case for getLookBacks method
      public static void main(String[] args) {
