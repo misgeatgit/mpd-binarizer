@@ -40,6 +40,23 @@ public class Binarizer {
     File f;
     private String[] featureNames;
 
+    private Category getCat(Double[] lookBackValues, Double valOnDPlusK, Double valOnD) {
+        List<Double[]> bins = DistributionStat.getBuckets(lookBackValues, 3);
+        Double[] midBucket = bins.get(1);
+        boolean UPConjuncture=valOnDPlusK > valOnD;
+        boolean DOWNConjuncture=valOnDPlusK <= valOnD;
+        
+        Category cat = null;
+        if (midBucket[0] > valOnDPlusK && DOWNConjuncture) {
+            cat = Category.DOWN;
+        } else if (midBucket[0] <= valOnDPlusK && midBucket[midBucket.length - 1] >= valOnDPlusK) {
+            cat = Category.NEUTRAL;
+        } else if (midBucket[midBucket.length - 1] < valOnDPlusK && UPConjuncture) {
+            cat = Category.UP;
+        }
+        return cat;
+    }
+
     enum Category {
 
         UP, NEUTRAL, DOWN //set values for each
@@ -49,7 +66,7 @@ public class Binarizer {
         try {
             dm = new CSVDataManager(rawDataFilePath);
             this.rawData = (ArrayList<String[]>) dm.getData();
-            // System.out.println("SIZE="+rawData.size());
+            System.out.println("SIZE="+rawData.size()+" COL="+(rawData.get(0).length-1));
             this.lookBackDay = lookBackDays;
             this.lookAheadDay = lookAheadDays;
             this.catagorizationIs_UP = catType;
@@ -67,16 +84,17 @@ public class Binarizer {
             Logger.getLogger(Binarizer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
-    private Category getCat(Double[] lookBackValues, Double val) {
+    
+    @Deprecated
+    private Category getCat(Double[] lookBackValues, Double valOnDPlusk) {
         List<Double[]> bins = DistributionStat.getBuckets(lookBackValues, 3);
         Double[] midBucket = bins.get(1);
         Category cat = null;
-        if (midBucket[0] > val) {
+        if (midBucket[0] > valOnDPlusk) {
             cat = Category.DOWN;
-        } else if (midBucket[0] <= val && midBucket[midBucket.length - 1] >= val) {
+        } else if (midBucket[0] <= valOnDPlusk && midBucket[midBucket.length - 1] >= valOnDPlusk) {
             cat = Category.NEUTRAL;
-        } else if (midBucket[midBucket.length - 1] < val) {
+        } else if (midBucket[midBucket.length - 1] < valOnDPlusk) {
             cat = Category.UP;
         }
         return cat;
@@ -140,7 +158,8 @@ public class Binarizer {
 
     public void binarize() {
         ArrayList<String[]> headerRemovedData = (ArrayList<String[]>) rawData.clone();
-        int expectedNoOfRows = headerRemovedData.get(0).length - 1 - lookBackDay; //for assertion
+        int expectedNoOfRows = headerRemovedData.get(0).length-1 - lookBackDay; //for assertion
+        System.out.println("Total set of popualrity="+(headerRemovedData.get(0).length-1)+" and predicted set ="+expectedNoOfRows);
         headerRemovedData.remove(0); //remove the date row
         setFeatureNames();
         HashMap<String, Double[]> songPopularityhash = getSongPopularityhash(headerRemovedData);
@@ -163,9 +182,9 @@ public class Binarizer {
                 }
                 Category prCat = null;
                 if (i + lookAheadDay > (songPoplarity.length - 1)) { // get the cat of D+K
-                    prCat = getCat(lookBackData, songPoplarity[songPoplarity.length - 1]);
+                    prCat = getCat(lookBackData, songPoplarity[songPoplarity.length - 1],songPoplarity[i]);
                 } else {
-                    prCat = getCat(lookBackData, songPoplarity[i + lookAheadDay]);
+                    prCat = getCat(lookBackData, songPoplarity[i + lookAheadDay],songPoplarity[i]);
                 }
                 String[] BinRowVlaues = new String[featureNames.length]; //the bin values as a string 
                 setCatValue(BinRowVlaues, prCat);
