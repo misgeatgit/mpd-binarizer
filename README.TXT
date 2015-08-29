@@ -1,7 +1,7 @@
 
-to generate the binarized csv files 
+#How to generate a binarized file 
 
-1. make sure you have java on your machine and then change your directory to the directory of the mpd-binarizer.jar 
+1. make sure you have java on your machine and then change your directory to the directory of the mpd-binarizer.jar.Here it is in the dist directory.
 
 2.copy the datasets to the current directory
 
