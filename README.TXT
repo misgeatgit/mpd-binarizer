@@ -20,6 +20,6 @@ The program will create a directory named by song_bin_of_ArtistDatePlaysMatrixGT
 Caution
 =======
 
-Please don't delete the lib folder and make sure the jar file and the lib folder always stay side by side
+If you want to run the jar file from other directory, make sure the dependecies in the jar file are in your java classpath. 
 
 
